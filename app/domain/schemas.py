@@ -52,6 +52,12 @@ class Claim(BaseModel):
     citation_ids: list[str] = Field(min_length=1)
 
 
+class GeneratedAnswer(BaseModel):
+    answer: str = Field(min_length=1)
+    claims: list[Claim] = Field(min_length=1)
+    citations: list[Citation] = Field(min_length=1)
+
+
 class VerificationStatus(str, Enum):
     SUPPORTED = "supported"
     CONTRADICTED = "contradicted"
