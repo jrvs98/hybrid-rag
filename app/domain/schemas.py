@@ -79,3 +79,14 @@ class VerifiedAnswer(BaseModel):
     citations: list[Citation] = Field(min_length=1)
     verification: list[CitationVerification] = Field(min_length=1)
     verified: bool
+
+
+class QueryRequest(BaseModel):
+    query: str = Field(min_length=1)
+    query_vector: list[float] = Field(min_length=1)
+    limit: int = Field(default=5, ge=1, le=100)
+    candidate_limit: int = Field(default=50, ge=1, le=500)
+
+
+class QueryResponse(VerifiedAnswer):
+    evidence: list[Evidence] = Field(min_length=1)
