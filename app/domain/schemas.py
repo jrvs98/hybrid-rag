@@ -10,6 +10,23 @@ class HealthResponse(BaseModel):
     environment: str
 
 
+class Document(BaseModel):
+    document_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    source_uri: Optional[HttpUrl] = None
+    metadata: dict[str, str] = Field(default_factory=dict)
+
+
+class DocumentChunk(BaseModel):
+    chunk_id: str = Field(min_length=1)
+    document_id: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    source_uri: Optional[HttpUrl] = None
+    metadata: dict[str, str] = Field(default_factory=dict)
+    start_offset: int = Field(ge=0)
+    end_offset: int = Field(ge=1)
+
+
 class Evidence(BaseModel):
     chunk_id: str = Field(min_length=1)
     document_id: str = Field(min_length=1)
