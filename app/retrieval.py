@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Callable, Optional
 
 from app.domain.schemas import DocumentChunk
 from app.indexes import IndexedChunk, InMemoryBM25Index, InMemoryDenseIndex
@@ -11,6 +11,7 @@ class HybridResult:
     fused_score: float
     bm25_score: Optional[float] = None
     dense_score: Optional[float] = None
+    reranker_score: Optional[float] = None
 
 
 def reciprocal_rank_fusion(
@@ -68,6 +69,40 @@ def reciprocal_rank_fusion(
         )
         for chunk_id in ranked[:limit]
     ]
+
+
+class CrossEncoderReranker:
+    def __init__(self, score: Callable[[str, str], float]) -> None:
+        self._score = score
+
+    def rerank(
+        self,
+        query: str,
+        candidates: list[HybridResult],
+        *,
+        limit: Optional[int] = None,
+    ) -> list[HybridResult]:
+        if limit is not None and limit < 1:
+            return []
+
+        reranked: list[HybridResult] = []
+        for candidate in candidates:
+            reranker_score = float(self._score(query, candidate.chunk.text))
+            if reranker_score != reranker_score or reranker_score in (float("inf"), float("-inf")):
+                raise ValueError("reranker score must be finite")
+            reranked.append(
+                HybridResult(
+                    chunk=candidate.chunk,
+                    fused_score=candidate.fused_score,
+                    bm25_score=candidate.bm25_score,
+                    dense_score=candidate.dense_score,
+                    reranker_score=reranker_score,
+                )
+            )
+        reranked.sort(
+            key=lambda result: (-result.reranker_score, -result.fused_score, result.chunk.chunk_id)
+        )
+        return reranked if limit is None else reranked[:limit]
 
 
 class HybridRetriever:
