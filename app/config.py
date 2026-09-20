@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     generation_provider: str = "local"
     reranker_provider: str = "local"
     verifier_provider: str = "local"
+    cors_allowed_origins: str = ""
     opensearch_url: str = "http://localhost:9200"
     opensearch_index: str = "rag_chunks"
 
